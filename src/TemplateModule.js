@@ -14,6 +14,12 @@ export function Main (props) {
   const { api } = useSubstrate();
   // Get the selected user from the `AccountSelector` component.
   const { accountPair } = props;
+
+  const onChange = (_, data) =>
+    setFormState(prev => ({ ...prev, [data.state]: data.value }));
+  const [formState, setFormState] = useState({ addressTo: null, amount: 0 });
+  const { addressTo, amount } = formState;
+
   // React hooks for all the state variables we track.
   // Learn more at: https://reactjs.org/docs/hooks-intro.html
   const [status, setStatus] = useState('');
@@ -93,6 +99,19 @@ export function Main (props) {
             list={[digest, `Owner: ${owner}`, `Block: ${block}`]}
           />
         </Form.Field>
+
+        <Form.Field>
+          {/* New Owner Address. */}
+          <Input
+            type='text'
+            id='new_owner'
+            label='New Owner'
+            placeholder='address'
+            state='addressTo'
+            onChange={onChange}
+          />
+        </Form.Field>
+
         {/* Buttons for interacting with the component. */}
         <Form.Field>
           {/* Button to create a claim. Only active if a file is selected,
@@ -123,6 +142,21 @@ export function Main (props) {
               callable: 'revokeClaim',
               inputParams: [digest],
               paramFields: [true]
+            }}
+          />
+          {/* Button to revoke a claim. Only active if a file is selected,
+          and is already claimed. Updates the `status`. */}
+          <TxButton
+            accountPair={accountPair}
+            label='Move Claim'
+            setStatus={setStatus}
+            type='SIGNED-TX'
+            disabled={!isClaimed() || owner !== accountPair.address}
+            attrs={{
+              palletRpc: 'templateModule',
+              callable: 'moveClaim',
+              inputParams: [addressTo, digest],
+              paramFields: [true, true]
             }}
           />
         </Form.Field>
